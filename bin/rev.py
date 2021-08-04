@@ -20,18 +20,20 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--reverse-tag',  nargs='+', dest='rev', 
         help='reverse read tags, comma separated', default=["_R2" ,"_2."])
     parser.add_argument('-a', '--absolute', help="return absolute path", action='store_true')
+    parser.add_argument('--force', action='store_true',help='Proceed if files are not found')
     parser.add_argument('-v', '--verbose', action='store_true',help='print verbose output')
     parser.add_argument('FILE', help='file to check')
     args = parser.parse_args()
 
     # Check that the input file exists, if not, exit
     if not os.path.isfile(args.FILE):
-        sys.exit("ERROR: R1 not found: '{}'".format(args.FILE))
+        if not args.force:
+            sys.exit("ERROR: R1 not found: '{}'".format(args.FILE))
     else:
-        if args.verbose:
-            eprint("INFO: Input file found {}".format(args.FILE))
+        eprint("INFO: Input file found {}".format(args.FILE))
     
     # Generate reverse filenames, exit if not found
+    revFile = ""
     for forTag, index in zip(args.fwd, range(len(args.fwd))):
         if forTag in args.FILE:
             if args.verbose:
@@ -49,6 +51,11 @@ if __name__ == '__main__':
                 else:
                     # Normalise the path
                     revFile = os.path.normpath(revFile)
-                print(revFile)
-                exit(0)
+    
+    if len(revFile) > 0:
+        print(revFile)
+        exit(0)
+    else:
+        eprint(f"ERROR: Unable to identify reverse file for {args.FILE}:\ndoes not contain forward tags {', '.join(args.fwd)}")
+        exit(1)
     
