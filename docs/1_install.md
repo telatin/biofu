@@ -6,6 +6,15 @@ permalink: /installation
 # Installation
 
 
+## With installer
+
+The installer will download the scripts and place them in `~/bin`.
+
+```bash
+curl https://telatin.github.io/biofu/installer.sh | bash
+```
+
+
 ## From source
 
 ```bash
