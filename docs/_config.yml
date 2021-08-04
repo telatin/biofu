@@ -1,7 +1,7 @@
-title: QAX
-repository: telatin/qax
+title: BioFu
+repository: telatin/biofu
 lang: en
-description: Qiime Artifacts eXtractor Documentation
+description: Command line utilities for bioinformaticians
 
 readme_index:
   with_frontmatter: true
