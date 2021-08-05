@@ -2,10 +2,10 @@
 sort: 2
 permalink: /list
 ---
+ 
+## Utilities
 
-# Generic Tools
-
-## rev
+### rev
 
 `rev.py` is a script to generate the filename of the reverse pair of a given file.
 
@@ -23,14 +23,14 @@ Throwing an error if the input file was not found (unless using `--force`), or
 if the autodetected reverse file was not fonund, or if the file did not contain
 the specified tags.
 
-## sample
+### sample
 
 `sample.py` is a script to extract the sample name from a filename.
 
 The input filename are split using a set of characters and recomposed specifying a set
 of fields.
 
-## trimcommon
+### trimcommon
 
 `trimcommon.py` is a script to trim the common prefix and suffix of a list of strings/files.
 
@@ -46,9 +46,9 @@ Will return:
 3
 ```
 
-# Conda Tools
+## Conda Tools
 
-## conda-list-bins
+### conda-list-bins
 
 Given a Conda package, returns (or saves) a list of all the binaries it installs.
 By default it will search in the conda-forge and bioconda channels, but this can be
