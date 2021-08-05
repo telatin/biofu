@@ -1,0 +1,147 @@
+#!/bin/bash
+# Andrea Telatin 2021, Version 1.0
+
+set -euo pipefail
+
+# Parameter to find executables using `find`
+EXECUTABLES="-executable"
+if [[ $(uname) == "Darwin" ]]; then 
+  EXECUTABLES="-perm +111"
+fi
+
+# General options
+THIS_BIN=$(basename "$0")                       # basename of this script
+CONDA="conda"                                   # conda executable (mamba can be used if found)
+DEF_CHANNELS=" -c conda-forge -c bioconda "     # default channels to use
+CUSTOM_CHANNELS=""                              # custom channels to use
+SAVE=""                                         # save output to file
+declare -a CHANNELS=()
+
+usage() { 
+    echo "Usage: $THIS_BIN [-m] [-c channels...] [-s | -o <outputfile>] package" 1>&2;
+    
+    echo "package          package to install" 1>&2;
+    echo "-c CHANNEL       conda channel [can be invoked multiple times]" 1>&2;  
+    echo "                 default are: $DEF_CHANNELS" 1>&2;  
+    echo "-o OUTPUT        save list to file (default: STDOUT)" 1>&2;  
+    echo "-s               save list to file named {package}.txt" 1>&2;  
+    echo ""
+}
+
+# function to print to stderr
+err() {
+    echo "$@" 1>&2;
+}
+
+# Function to get temp dir
+get_tmp_dir() {
+    local  tempdir=""
+    
+    # if $1 is set
+    if [[ ! -z ${1+x} ]]; then
+        local  __resultvar=$1
+    fi
+    if [[ -z $TMPDIR ]]; then
+        tempdir="/tmp"
+    else
+        tempdir=$TMPDIR
+    fi
+    
+    if [[ ! -z ${__resultvar+x} ]]; then
+        eval $__resultvar="'$tempdir'"
+    else
+        echo "$tempdir"
+    fi
+}
+
+quitmsg() {
+  echo "Error: ${1}...";
+  # if INSTALLDIR is not empty
+  if [[ ! -z ${INSTALLDIR+x} ]]; then
+    if [[ -d "$INSTALLDIR" ]]; then
+        rm -rf "${INSTALLDIR}"
+    fi
+  fi
+  exit 1;
+}
+
+# Set to mamba automatically
+mamba --version >/dev/null 2>&1 && SAVE=1;
+
+while getopts "c:o:sm" opts; do
+    case "${opts}" in
+        c)  
+            CUSTOM_CHANNELS+=" -c ${OPTARG} ";;
+        o)
+            o=${OPTARG};;
+        s)
+            SAVE=1;;
+        m)
+            CONDA="mamba";;
+    esac
+done
+shift $((OPTIND-1))
+
+# Generate custom channels string
+if [[ ! -z "${CUSTOM_CHANNELS}" ]]; then
+  CHANNELS=$CUSTOM_CHANNELS
+else
+  CHANNELS=$DEF_CHANNELS
+fi
+
+
+if [[ -z ${1+x} ]]; then
+  usage "";
+  quitmsg "Missing parameter: package name"
+fi
+
+$CONDA --version 2>/dev/null || quitmsg "Conda not found"
+
+
+PACKAGE=$1
+SYSTEM_TEMP=$(get_tmp_dir)
+INSTALLDIR=$(mktemp -d ${SYSTEM_TEMP}/CONDA_${PACKAGE}_XXXXXX)
+err "Temporary directory: $INSTALLDIR"
+
+# Generate output filename
+if [[ ! -z ${SAVE} ]]; then
+   o="${PACKAGE}.txt"
+fi
+
+# Is the package available?
+LIST=$($CONDA search ${PACKAGE} | grep ${PACKAGE} | awk '{print $1}')
+
+# check if LIST contains PACKAGE as a word with pattern matching
+
+if [[ $LIST =~ $PACKAGE ]] && [[ $LIST != 'No match found for' ]]; then
+  err "${PACKAGE} found"
+else
+  quitmsg "Package ${PACKAGE} not found"
+fi
+# Create environment for `package`, only deps
+$CONDA create  -p "$INSTALLDIR" $CHANNELS "$PACKAGE" \
+  -y -q --only-deps >  "$INSTALLDIR"/create.log 2>&1
+if [[ -d "$INSTALLDIR"/bin ]]; then
+  find "$INSTALLDIR"/bin -maxdepth 1  $EXECUTABLES  | rev | cut -f 1 -d / | rev | sort > "$INSTALLDIR"/deps
+else
+  touch "$INSTALLDIR"/deps
+fi
+
+# Add `package` to environment
+$CONDA install -p "$INSTALLDIR" $CHANNELS "$PACKAGE" \
+  -y -q  >  "$INSTALLDIR"/create.log 2>&1
+find "$INSTALLDIR"/bin -maxdepth 1  $EXECUTABLES  | rev | cut -f 1 -d / | rev | sort > "$INSTALLDIR"/full
+
+# Differences
+(diff "$INSTALLDIR"/{deps,full} || true) | grep "^>" |cut -f 2 -d " " > "$INSTALLDIR"/bins
+
+
+# save output or STDOUT
+if [[ -z ${o+x} ]]; then
+	cat "$INSTALLDIR"/bins
+else
+    echo "Saving to $o"
+    mv "$INSTALLDIR"/bins "$o"
+fi
+
+rm -rf "$INSTALLDIR"
