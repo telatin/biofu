@@ -1,0 +1,85 @@
+#!/bin/sh
+
+echo "MINICONDA BASH INSTALLER"
+
+set -euo pipefail
+# Installer for Miniconda 64-bit / Python 3
+
+if [ "$(uname -m)" != "x86_64" ]; then
+    echo "Miniconda is only available for 64-bit systems"
+    exit 1
+fi
+
+# check if $1 is set
+FORCE=0
+if [ ! -z "${1+x}" ] && [[ $1 == "--force" ]]; then
+    FORCE=1
+fi
+
+type "conda" > /dev/null 2>&1
+if [[ $? == 0 ]] && [[ $FORCE -eq 0 ]]; then
+    echo "Miniconda is already installed, type --force the installation"
+    exit 0
+fi
+
+# set Linux/Darwin url
+OS=$(uname)
+if [[ $OS == "Darwin" ]]; then
+    echo "Getting Miniconda for macOS..."
+    url="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
+else
+    echo "Getting Miniconda for Linux..."
+    url="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+fi
+
+# set install script name
+script_name='miniconda.sh'
+
+# set environment path 
+env_path="$HOME/miniconda-fu"
+ 
+unset PYTHONHOME
+unset PYTHONPATH
+ 
+
+if [[ -e $script_name ]]; then
+    rm $script_name
+fi
+
+# Download installer
+if type "wget" > /dev/null; then
+echo "Downloading installer [wget]..."
+    wget --quiet "$url" -O "$script_name"
+elif type "curl" > /dev/null; then
+    echo "Downloading installer [curl]..."
+    curl  --silent "$url" -o "$script_name"
+else
+    echo "Please install curl or wget"
+fi
+
+ 
+if [[ -e $env_path ]]; then
+    echo "Removing existing Miniconda install..."
+    rm -rf $env_path
+fi
+
+# Install Miniconda, unattended
+echo "Installing Miniconda..."
+bash $script_name -b -f -p $env_path >> /dev/null
+
+rm $script_name
+
+# setup path and create environment
+echo "Creating temporary conda environment..."
+export PATH=$env_path:$PATH
+
+# Run conda init for current shell
+$env_path/bin/conda init $(basename $SHELL)
+
+echo "Reload the current shell to use $env_path/bin/conda"
+#$env_path/bin/conda create --quiet -y -n $env_name python numpy scipy matplotlib ipython jupyter >> /dev/null
+
+# run the python environment
+#source $env_path/bin/activate $env_name
+
+

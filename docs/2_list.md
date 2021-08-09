@@ -5,6 +5,8 @@ permalink: /list
  
 ## Utilities
 
+Every Python utility comes with a `--help` option.
+
 ### rev
 
 `rev.py` is a script to generate the filename of the reverse pair of a given file.
@@ -28,7 +30,8 @@ the specified tags.
 `sample.py` is a script to extract the sample name from a filename.
 
 The input filename are split using a set of characters and recomposed specifying a set
-of fields.
+of fields. Given a filename like `sample_S1_R1.fastq.gz`, the script will
+return `sample`, but it can be configured as where to split and which fields to join.
 
 ### trimcommon
 

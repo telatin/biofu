@@ -1,0 +1,50 @@
+{
+    "micro" : {
+        "name" : "Micro Editor, latest version",
+        "requires": ["curl"],
+        "url": "https://micro-editor.github.io/",
+        "command": "curl https://getmic.ro | bash",
+        "produces": "micro"
+    },
+    "nextflow": {
+        "name": "Nextflow, latest version",
+        "requires": ["java", "curl"],
+        "url": "https://nextflow.io/",
+        "command": "curl -s https://get.nextflow.io | bash",
+        "produces": "nextflow"
+    },
+    "cpanm": {
+        "name": "CPAN Minus (Perl modules manager, requires sudo",
+        "requires": ["curl", "sudo"],
+        "url": "https://metacpan.org/dist/App-cpanminus/view/bin/cpanm",
+        "command": "curl -L https://cpanmin.us | perl - --sudo App::cpanminus"
+    },
+    "cpanm-local": {
+        "name": "CPAN Minus (Perl modules manager)",
+        "requires": ["curl"],
+        "url": "https://metacpan.org/dist/App-cpanminus/view/bin/cpanm",
+        "command": "curl -L https://cpanmin.us | perl - --sudo App::cpanminus"
+    },
+    "miniconda (linux 64)": {
+        "name": "Miniconda (Linux 64)",
+        "requires": ["curl", "sudo"],
+        "url": "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh",
+        "command": "curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash"
+    },
+    "sudo": {
+        "type": "dependency check",
+        "command": "sudo --version"
+    },
+    "git": {
+        "type": "dependency check",
+        "command": "git --version"
+    },
+    "java": {
+        "type": "dependency check",
+        "command": "java -version"
+    },
+    "curl": {
+        "type": "dependency check",
+        "command": "curl --version"
+    }
+}
